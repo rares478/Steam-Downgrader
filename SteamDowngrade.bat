@@ -59,8 +59,6 @@ if "%steamPath%"=="" (
     exit /b 1
 )
 
-echo Steam installation path: "%steamPath%"
-
 :: Check if steamPath contains "Program Files" or "Program Files (x86)"
 if defined ProgramFiles(x86) (
     echo.
@@ -78,17 +76,26 @@ echo Checking Steam installation path...
 
 :: Check for Program Files (x86) first
 echo Checking if Steam is installed in Program Files, if not then you'll get some errors, ignore them.
-echo "%programFiles%" | find /i "Program Files (x86)" >nul
+find /i "Program Files (x86)" "%programFiles%" >nul
 if not errorlevel 1 (
     set "steamPath=%programFiles%\Steam"
 )
 
 :: Check for Program Files (without (x86))
-echo "%programFiles%" | find /i "Program Files" >nul
+find /i "Program Files" "%programFiles%" >nul
 if not errorlevel 1 (
     set "steamPath=%programFiles%\Steam"
 )
+
 echo Steam installation path: "%steamPath%"
+set /p "wrong=If this is wrong input it here if not then enter nothing :"
+
+if not "%wrong%"=="" (
+    set "steamPath=%wrong%"
+    echo Steam installation path: "%steamPath%"
+)
+
+pause
 
 :: Define folders to delete contents from
 set "folders=bin clientui controller_base dumps friends graphics music package public resource steam steamui tenfoot"
