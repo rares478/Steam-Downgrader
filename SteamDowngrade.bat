@@ -61,6 +61,35 @@ if "%steamPath%"=="" (
 
 echo Steam installation path: "%steamPath%"
 
+:: Check if steamPath contains "Program Files" or "Program Files (x86)"
+if defined ProgramFiles(x86) (
+    echo.
+    echo Running on 64-bit Windows
+    set "programFiles=%ProgramFiles(x86)%"
+) else (
+    echo.
+    echo Running on 32-bit Windows
+    set "programFiles=%ProgramFiles%"
+)
+
+:: Check if Steam is installed in Program Files or Program Files (x86)
+echo.
+echo Checking Steam installation path...
+
+:: Check for Program Files (x86) first
+echo Checking if Steam is installed in Program Files, if not then you'll get some errors, ignore them.
+echo "%programFiles%" | find /i "Program Files (x86)" >nul
+if not errorlevel 1 (
+    set "steamPath=%programFiles%\Steam"
+)
+
+:: Check for Program Files (without (x86))
+echo "%programFiles%" | find /i "Program Files" >nul
+if not errorlevel 1 (
+    set "steamPath=%programFiles%\Steam"
+)
+echo Steam installation path: "%steamPath%"
+
 :: Define folders to delete contents from
 set "folders=bin clientui controller_base dumps friends graphics music package public resource steam steamui tenfoot"
 
@@ -75,16 +104,9 @@ pause
 echo.
 echo Deleting contents from Steam folders...
 for %%f in (%folders%) do (
-    if exist "%steamPath%\%%f" (
-        echo Deleting contents of "%steamPath%\%%f"
-        rmdir /s /q "%steamPath%\%%f" >nul 2>&1
-        mkdir "%steamPath%\%%f" >nul 2>&1
-        if errorlevel 1 (
-            echo Failed to delete contents of "%steamPath%\%%f"
-        )
-    ) else (
-        echo Folder "%steamPath%\%%f" does not exist
-    )
+    echo Deleting contents of "%steamPath%\%%f"
+    powershell -Command "Get-ChildItem -Path '%steamPath%\%%f' -Recurse | Remove-Item -Force -Recurse -ErrorAction SilentlyContinue"
+    mkdir "%steamPath%\%%f" >nul 2>&1
 )
 
 :: Download manifest file
@@ -213,6 +235,7 @@ if exist "%steamPath%\.crash" (
 echo.
 echo Starting Steam...
 start "" "%steamPath%\steam.exe"
+echo Please wait for Steam to start properly.
 
 :: Workaround to wait until steam properly starts
 :loop
@@ -222,10 +245,10 @@ if exist "%steamPath%\.crash" (
     echo BootStrapperInhibitAll=Enable > "%steamPath%\steam.cfg"
     echo BootStrapperForceSelfUpdate=disable >> "%steamPath%\steam.cfg"
 ) else (
-    echo Waiting for Steam to properly start...
     ping -n 1 -w 250 127.0.0.1 > nul
     goto loop
 )
+
 
 del "%linksFile%" 
 echo.
