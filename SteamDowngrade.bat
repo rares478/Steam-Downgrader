@@ -63,11 +63,11 @@ if "%steamPath%"=="" (
 if defined ProgramFiles(x86) (
     echo.
     echo Running on 64-bit Windows
-    set "programFiles=%ProgramFiles(x86)%"
+    set "programFiles=%Program Files (x86)%"
 ) else (
     echo.
     echo Running on 32-bit Windows
-    set "programFiles=%ProgramFiles%"
+    set "programFiles=%Program Files%"
 )
 
 :: Check if Steam is installed in Program Files or Program Files (x86)
