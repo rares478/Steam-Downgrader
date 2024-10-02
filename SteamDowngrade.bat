@@ -38,8 +38,8 @@ pause
 
 for /f "delims=" %%I in ('powershell.exe -noprofile -command "(new-object -COM 'Shell.Application').BrowseForFolder(0,'Please select the folder containing the required files.',0x200,0).self.path"') do (
         set "steamPath=%%I"
-        echo Steam Path: %steamPath%
     )
+echo Selected Path: %steamPath%
 
 :: Check if the folder path is empty or not specified
 if not defined steamPath (
