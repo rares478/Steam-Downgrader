@@ -25,7 +25,9 @@ for /f "tokens=1,2 delims=," %%I in ('powershell -ExecutionPolicy Bypass -Comman
 rem Check if commit SHA is empty
 if "%commit_sha%" == "" (
     echo.
-    echo No commits found older than '%target_date%' for file '%file_path%' in repository '%repo_owner%/%repo_name%'.
+    echo Error: Failed to fetch commit SHA.
+    pause
+    exit /b 1
 ) else (
     echo.
     echo Commit SHA: %commit_sha%
@@ -33,66 +35,25 @@ if "%commit_sha%" == "" (
 )
 
 pause
-:: Check if running on 64-bit or 32-bit Windows
-if defined ProgramFiles(x86) (
-    echo.
-    echo Running on 64-bit Windows
-    set "regKey=HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Valve\Steam"
-) else (
-    echo.
-    echo Running on 32-bit Windows
-    set "regKey=HKEY_LOCAL_MACHINE\SOFTWARE\Valve\Steam"
-)
 
-:: Retrieve Steam installation path from registry
-echo.
-echo Retrieving Steam installation path...
-for /f "tokens=3*" %%a in ('reg query "%regKey%" /v InstallPath 2^>nul') do (
-    set "steamPath=%%a %%b"
-    set "steamPath=!steamPath: =!"
-)
+for /f "delims=" %%I in ('powershell.exe -noprofile -command "(new-object -COM 'Shell.Application').BrowseForFolder(0,'Please select the folder containing the required files.',0x200,0).self.path"') do (
+        set "steamPath=%%I"
+    )
 
-:: Check if steamPath was retrieved successfully
-if "%steamPath%"=="" (
-    echo Error: Could not retrieve Steam installation path from registry.
+:: Check if the folder path is empty or not specified
+if not defined steamPath (
+    echo.
+    echo Error: No folder path specified.
     pause
     exit /b 1
 )
 
-:: Check if steamPath contains "Program Files" or "Program Files (x86)"
-if defined ProgramFiles(x86) (
+:: Check if the folder path exists
+if not exist "%steamPath%\steam.exe" (
     echo.
-    echo Running on 64-bit Windows
-    set "programFiles=%Program Files (x86)%"
-) else (
-    echo.
-    echo Running on 32-bit Windows
-    set "programFiles=%Program Files%"
-)
-
-:: Check if Steam is installed in Program Files or Program Files (x86)
-echo.
-echo Checking Steam installation path...
-
-:: Check for Program Files (x86) first
-echo Checking if Steam is installed in Program Files, if not then you'll get some errors, ignore them.
-find /i "Program Files (x86)" "%programFiles%" >nul
-if not errorlevel 1 (
-    set "steamPath=%programFiles%\Steam"
-)
-
-:: Check for Program Files (without (x86))
-find /i "Program Files" "%programFiles%" >nul
-if not errorlevel 1 (
-    set "steamPath=%programFiles%\Steam"
-)
-
-echo Steam installation path: "%steamPath%"
-set /p "wrong=If this is wrong input it here if not then enter nothing :"
-
-if not "%wrong%"=="" (
-    set "steamPath=%wrong%"
-    echo Steam installation path: "%steamPath%"
+    echo Error: The specified folder does not contain Steam. Given path: "%steamPath%"
+    pause
+    exit /b 1
 )
 
 pause
